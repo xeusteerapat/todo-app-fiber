@@ -13,6 +13,7 @@ type Todo struct {
 	Completed bool   `json:"completed"`
 }
 
+// Todos
 var todos = []Todo{
 	{
 		ID: 1, Name: "Learn GO", Completed: true,
