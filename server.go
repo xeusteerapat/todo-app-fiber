@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
@@ -36,6 +38,7 @@ func main() {
 
 	app.Get("/todos", getTodos)
 	app.Post("/todo", createTodo)
+	app.Delete("/todo/:id", deleteTodo)
 
 	app.Listen(":5000")
 }
@@ -68,4 +71,26 @@ func createTodo(c *fiber.Ctx) error {
 	todos = append(todos, todo)
 
 	return c.Status(fiber.StatusCreated).JSON(todo)
+}
+
+func deleteTodo(c *fiber.Ctx) error {
+	todoId := c.Params("id")
+	id, err := strconv.Atoi(todoId)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid id",
+		})
+	}
+
+	for i, todo := range todos {
+		if todo.ID == id {
+			todos = append(todos[0:i], todos[i+1:]...)
+			return c.Status(fiber.StatusOK).JSON(todo)
+		}
+	}
+
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		"error": "Todo not found",
+	})
 }
