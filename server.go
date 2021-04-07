@@ -10,7 +10,7 @@ import (
 type Todo struct {
 	ID        int    `json:"id"`
 	Name      string `json:"name"`
-	Completed bool   `json:"conpleted"`
+	Completed bool   `json:"completed"`
 }
 
 var todos = []Todo{
@@ -39,6 +39,7 @@ func main() {
 	app.Get("/todos", getTodos)
 	app.Post("/todo", createTodo)
 	app.Delete("/todo/:id", deleteTodo)
+	app.Patch("/todo/:id", updateTodo)
 
 	app.Listen(":5000")
 }
@@ -87,6 +88,46 @@ func deleteTodo(c *fiber.Ctx) error {
 		if todo.ID == id {
 			todos = append(todos[0:i], todos[i+1:]...)
 			return c.Status(fiber.StatusOK).JSON(todo)
+		}
+	}
+
+	return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		"error": "Todo not found",
+	})
+}
+
+func updateTodo(c *fiber.Ctx) error {
+	type request struct {
+		Name      string `json:"name"`
+		Completed bool   `json:"completed"`
+	}
+
+	var body request
+	err := c.BodyParser(&body)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot parse JSON",
+		})
+	}
+
+	todoId := c.Params("id")
+	id, err := strconv.Atoi(todoId)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid id",
+		})
+	}
+
+	for i, todo := range todos {
+		if todo.ID == id {
+			todos[i] = Todo{
+				ID:        id,
+				Name:      body.Name,
+				Completed: body.Completed,
+			}
+
+			return c.Status(fiber.StatusOK).JSON(todos[i])
 		}
 	}
 
